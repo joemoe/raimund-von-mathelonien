@@ -14,452 +14,241 @@
 
 <script type="text/javascript">
 
-var game = new Phaser.Game(
-	1920,
-	900, 
-	Phaser.AUTO, 
-	'raimund', 
-	{ preload: preload, create: create, update: update }
-);
+var raimund = {};
 
-function preload() {
-	game.scale.maxWidth = 1920;
-    game.scale.maxHeight = 900;
-	game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
-    game.scale.setScreenSize();
-
-    game.load.audio('bg-sound', 'soundtrack.mp3');
-
-	game.load.image('background', 'assetsbimbo/background.png');
-	game.load.image('block800', 'assetsbimbo/block800.png');
-	game.load.image('block500', 'assetsbimbo/block500.png');
-	game.load.image('block400', 'assetsbimbo/block400.png');
-	game.load.image('block300', 'assetsbimbo/block300.png');
-	game.load.image('block200', 'assetsbimbo/block200.png');
-	game.load.image('block100', 'assetsbimbo/block100.png');
-	game.load.image('block50', 'assetsbimbo/block50.png');
-	
-	game.load.image('wand217', 'assetsbimbo/wand217.png');
-	game.load.image('wand580', 'assetsbimbo/wand580.png');
-	game.load.image('wand150', 'assetsbimbo/wand150.png');
-	game.load.image('wandho115', 'assetsbimbo/wandho115.png');
-	game.load.image('wand110', 'assetsbimbo/wand110.png');
-	game.load.image('wand80', 'assetsbimbo/wand80.png');
-	game.load.image('wandho150', 'assetsbimbo/wandho150.png');
-	game.load.image('wand30', 'assetsbimbo/wand30.png');
-	
-	game.load.image('donut', 'assetsbimbo/donut.png');
-	game.load.image('donuts', 'assetsbimbo/donuts.png');
-	game.load.image('muffin', 'assetsbimbo/muffin.png');
-	game.load.image('schnitten', 'assetsbimbo/schnitten.png');
-	game.load.image('schoki', 'assetsbimbo/schoki.png');
-	
-	game.load.spritesheet('bimbo', 'assetsbimbo/bimbo.png', 45, 96)
+raimund.gameState = function() {
+	this.blocks;
+	this.walls;
+	this.foods;
+	this.player;
+	this.cursors;
+	this.score = 0;
+	this.scoreText;
 }
 
-var blocks50;
-var blocks100;
-var blocks200;
-var blocks300;
-var blocks400;
-var blocks500;
-var blocks800;
+raimund.gameState.prototype.preload = function() {
+	this.scale.maxWidth = 1920;
+    this.scale.maxHeight = 900;
+	this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+    this.scale.setScreenSize();
 
-var wall;
-var wall1;
+    this.load.audio('bg-sound', 'soundtrack.mp3');
 
-var food;
+	this.load.image('background', 'assetsbimbo/background.png');
+	this.load.image('block800', 'assetsbimbo/block800.png');
+	this.load.image('block500', 'assetsbimbo/block500.png');
+	this.load.image('block400', 'assetsbimbo/block400.png');
+	this.load.image('block300', 'assetsbimbo/block300.png');
+	this.load.image('block200', 'assetsbimbo/block200.png');
+	this.load.image('block100', 'assetsbimbo/block100.png');
+	this.load.image('block50', 'assetsbimbo/block50.png');
+	
+	this.load.image('wand217', 'assetsbimbo/wand217.png');
+	this.load.image('wand580', 'assetsbimbo/wand580.png');
+	this.load.image('wand150', 'assetsbimbo/wand150.png');
+	this.load.image('wandho115', 'assetsbimbo/wandho115.png');
+	this.load.image('wand110', 'assetsbimbo/wand110.png');
+	this.load.image('wand80', 'assetsbimbo/wand80.png');
+	this.load.image('wandho150', 'assetsbimbo/wandho150.png');
+	this.load.image('wand30', 'assetsbimbo/wand30.png');
+	
+	this.load.image('donut', 'assetsbimbo/donut.png');
+	this.load.image('donuts', 'assetsbimbo/donuts.png');
+	this.load.image('muffin', 'assetsbimbo/muffin.png');
+	this.load.image('schnitten', 'assetsbimbo/schnitten.png');
+	this.load.image('schoki', 'assetsbimbo/schoki.png');
+	
+	this.load.spritesheet('bimbo', 'assetsbimbo/bimbo.png', 45, 96)
+}
 
-var player;
-
-var cursors;
-
-var score = 0;
-var scoreText;
 
 
-function create() {
 
-	game.physics.startSystem(Phaser.Physics.ARCADE);
+raimund.gameState.prototype.create = function() {
 
-	var sound = game.add.audio('bg-sound');
+	this.physics.startSystem(Phaser.Physics.ARCADE);
+
+	var sound = this.add.audio('bg-sound');
 	sound.loop = true;
 	sound.play();
 
 
-	game.add.sprite(0, 0, 'background');
-	
-	blocks50 = game.add.group();
-	blocks50.enableBody = true;
-	
-	blocks100 = game.add.group();
-	blocks100.enableBody = true;
+	this.add.sprite(0, 0, 'background');
 
-	blocks200 = game.add.group();
-	blocks200.enableBody = true;
+	this.blocks = this.add.group();
+	this.blocks.enableBody = true;
 	
-	blocks300 = game.add.group();
-	blocks300.enableBody = true;
+	this.walls = this.add.group();
+	this.walls.enableBody = true;
+
+	var blocksMap = [
+		[0, this.world.height -58, 'block800'],
+		[900, this.world.height -200, 'block200'],
+		[320, this.world.height -340, 'block400'],
+		[60, this.world.height -450, 'block50'],
+		[300, this.world.height -590, 'block100'],
+		[0, this.world.height -745, 'block200'],
+		[450, this.world.height -815, 'block300'],
+		[650, this.world.height -540, 'block400'],
+		[1250, this.world.height -600, 'block100'],
+		[1470, this.world.height -755, 'block50'],
+		[1750, this.world.height -780, 'block50'],
+		[1660, this.world.height -600, 'block50'],
+		[1860, this.world.height -300, 'block50'],
+		[1630, this.world.height -352, 'block50'],
+		[1415, this.world.height -350, 'block50'],
+		[1130, this.world.height -300, 'block100'],
+		[1295, this.world.height -70, 'block50'],
+		[1600, this.world.height -43, 'block50'],
+		[1800, this.world.height -54, 'block50']
+	];
+
+	for(var i = 0; i < blocksMap.length; i++) {
+		var block = this.blocks.create(blocksMap[i][0], blocksMap[i][1], blocksMap[i][2]);
+		block.body.immovable = true;
+	}
+
+	var wallsMap = [
+		[650, this.world.height -757, 'wand217'],
+		[1100, this.world.height -620, 'wand580'],
+		[1100, this.world.height -970, 'wand150'],
+		[1620, this.world.height -790, 'wand217'],
+		[1765, this.world.height -110, 'wand150'],
+		[1855, this.world.height -110, 'wand150'],
+		[1130, this.world.height -620, 'wandho115'],
+		[1350, this.world.height -620, 'wandho115'],
+		[1468, this.world.height -677, 'wand80'],
+		[1804, this.world.height -763, 'wandho115'],
+		[1475, this.world.height -395, 'wandho150'],
+		[1700, this.world.height -320, 'wandho150'],
+		[1710, this.world.height -580, 'wand30'],
+		[1300, this.world.height -350, 'wandho115']
+	];
+
+	for(var i = 0; i < wallsMap.length; i++) {
+		var wall = this.walls.create(wallsMap[i][0], wallsMap[i][1], wallsMap[i][2]);
+		wall.body.immovable = true;
+	}	
 	
-	blocks400 = game.add.group();
-	blocks400.enableBody = true;
+	this.player = this.add.sprite(20, this.world.height -200, 'bimbo')
+	this.physics.arcade.enable(this.player);
+	this.player.body.bounce.y = 0.2;
+	this.player.body.gravity.y = 320;
 	
-	blocks800 = game.add.group();
-	blocks800.enableBody = true;
-	
-	wall = game.add.group();
-	wall.enableBody = true;
-	
-	
-	var blocks8001 = blocks800.create(0, game.world.height -58, 'block800');
-	blocks8001.body.immovable = true;
-	
-	var blocks2001 = blocks200.create(900, game.world.height -200, 'block200');
-	blocks2001.body.immovable = true;
-	
-	var blocks4001 = blocks400.create(320, game.world.height -340, 'block400');
-	blocks4001.body.immovable = true;
-	
-	var blocks501 = blocks50.create(60, game.world.height -450, 'block50');
-	blocks501.body.immovable = true;
-	
-	var blocks1001 = blocks100.create(300, game.world.height -590, 'block100');
-	blocks1001.body.immovable = true;
-	
-	blocks2001 = blocks200.create(0, game.world.height -745, 'block200');
-	blocks2001.body.immovable = true;
-	
-	var blocks3001 = blocks300.create(450, game.world.height -815, 'block300');
-	blocks3001.body.immovable = true;
-	
-	blocks4001 = blocks400.create(650, game.world.height -540, 'block400');
-	blocks4001.body.immovable = true;
-	
-	blocks1001 = blocks100.create(1250, game.world.height -600, 'block100');
-	blocks1001.body.immovable = true;
-	
-	blocks501 = blocks50.create(1470, game.world.height -755, 'block50');
-	blocks501.body.immovable = true;
-	
-	blocks501 = blocks50.create(1750, game.world.height -780, 'block50');
-	blocks501.body.immovable = true;
-	
-	blocks501 = blocks50.create(1660, game.world.height -600, 'block50');
-	blocks501.body.immovable = true;
-	
-	blocks501 = blocks50.create(1860, game.world.height -300, 'block50');
-	blocks501.body.immovable = true;
-	
-	blocks501 = blocks50.create(1630, game.world.height -352, 'block50');
-	blocks501.body.immovable = true;
-	
-	blocks501 = blocks50.create(1415, game.world.height -350, 'block50');
-	blocks501.body.immovable = true;
-	
-	blocks1001 = blocks100.create(1130, game.world.height -300, 'block100');
-	blocks1001.body.immovable = true;
-	
-	blocks501 = blocks50.create(1295, game.world.height -70, 'block50');
-	blocks501.body.immovable = true;
-	
-	blocks501 = blocks50.create(1600, game.world.height -43, 'block50');
-	blocks501.body.immovable = true;
-	
-	blocks501 = blocks50.create(1800, game.world.height -54, 'block50');
-	blocks501.body.immovable = true;
-	
-	
-	var wall1 = wall.create(650, game.world.height -757, 'wand217');
-	wall1.body.immovable = true;
-	wall1 = wall.create(1100, game.world.height -620, 'wand580');
-	wall1.body.immovable = true;
-	wall1 = wall.create(1100, game.world.height -970, 'wand150');
-	wall1.body.immovable = true;
-	wall1 = wall.create(1620, game.world.height -790, 'wand217');
-	wall1.body.immovable = true;
-	wall1 = wall.create(1765, game.world.height -110, 'wand150');
-	wall1.body.immovable = true;
-	wall1 = wall.create(1855, game.world.height -110, 'wand150');
-	wall1.body.immovable = true;
-	wall1 = wall.create(1130, game.world.height -620, 'wandho115');
-	wall1.body.immovable = true;
-	wall1 = wall.create(1350, game.world.height -620, 'wandho115');
-	wall1.body.immovable = true;
-	wall1 = wall.create(1468, game.world.height -677, 'wand80');
-	wall1.body.immovable = true;
-	wall1 = wall.create(1804, game.world.height -763, 'wandho115');
-	wall1.body.immovable = true;
-	wall1 = wall.create(1475, game.world.height -395, 'wandho150');
-	wall1.body.immovable = true;
-	wall1 = wall.create(1700, game.world.height -320, 'wandho150');
-	wall1.body.immovable = true;
-	wall1 = wall.create(1710, game.world.height -580, 'wand30');
-	wall1.body.immovable = true;
-	wall1 = wall.create(1300, game.world.height -350, 'wandho115');
-	wall1.body.immovable = true;
-	
-	
-	player = game.add.sprite(20, game.world.height -200, 'bimbo')
-	game.physics.arcade.enable(player);
-	player.body.bounce.y = 0.2;
-	player.body.gravity.y = 320;
-	
-	player.animations.add('left', [0, 1, 2, 3], 10, true);
-	player.animations.add('right', [5, 6, 7, 8], 10, true);
+	this.player.animations.add('left', [0, 1, 2, 3], 10, true);
+	this.player.animations.add('right', [5, 6, 7, 8], 10, true);
 
 	
 	
-	foods = game.add.group();
+	this.foods = this.add.group();
 	
-	foods.enableBody = true;
-	
-	
-	var food = foods.create(100, game.world.height -400, 'schoki');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.5;
-	
-	food = foods.create(180, game.world.height -390, 'donut');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.5;
-	
-	food = foods.create(260, game.world.height -390, 'schnitten');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.5;
-	
-	food = foods.create(340, game.world.height -285, 'muffin');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.5;
-	
-	food = foods.create(420, game.world.height -285, 'schoki');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	food = foods.create(500, game.world.height -285, 'donut');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	food = foods.create(580, game.world.height -285, 'schnitten');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	food = foods.create(660, game.world.height -285, 'muffin');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	food = foods.create(740, game.world.height -390, 'schoki');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.5;
-	
-	food = foods.create(900, game.world.height -485, 'donut');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.5;
-	
-	food = foods.create(980, game.world.height -485, 'schnitten');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.5;
-	
-	food = foods.create(1060, game.world.height -485, 'muffin');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.5;
-	
-	food = foods.create(670, game.world.height -485, 'muffin');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	food = foods.create(590, game.world.height -600, 'schoki');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	food = foods.create(505, game.world.height -600, 'donut');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	food = foods.create(420, game.world.height -600, 'schnitten');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	food = foods.create(330, game.world.height -530, 'muffin');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	food = foods.create(70, game.world.height -660, 'schoki');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	food = foods.create(300, game.world.height -900, 'donut');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	food = foods.create(365, game.world.height -900, 'schnitten');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	food = foods.create(165, game.world.height -1100, 'muffin');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	food = foods.create(85, game.world.height -1100, 'schoki');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	food = foods.create(5, game.world.height -1100, 'donut');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	food = foods.create(450, game.world.height -1100, 'muffin');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	food = foods.create(540, game.world.height -1100, 'schoki');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	food = foods.create(630, game.world.height -1100, 'donut');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	food = foods.create(720, game.world.height -1100, 'schnitten');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	food = foods.create(685, game.world.height -700, 'muffin');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	food = foods.create(785, game.world.height -700, 'schoki');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	food = foods.create(885, game.world.height -700, 'donut');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	food = foods.create(985, game.world.height -700, 'schnitten');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	food = foods.create(1280, game.world.height -700, 'muffin');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	food = foods.create(1480, game.world.height -1100, 'schoki');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	food = foods.create(1758, game.world.height -1100, 'donut');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	food = foods.create(1668, game.world.height -1100, 'schnitten');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	food = foods.create(1866, game.world.height -720, 'muffin');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	food = foods.create(1637, game.world.height -570, 'schoki');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	food = foods.create(1422, game.world.height -590, 'donut');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	food = foods.create(1199, game.world.height -590, 'muffin');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	food = foods.create(1130, game.world.height -590, 'schnitten');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	food = foods.create(1305, game.world.height -300, 'schoki');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	food = foods.create(1605, game.world.height -280, 'donut');
-	food.body.gravity.y = 300;
-	food.body.bounce.y = 0.2 + Math.random() * 0.7;
-	
-	
-	
-	
-	
-	
-	scoreText = game.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#000000'});
-	cursors = game.input.keyboard.createCursorKeys();	
-	
-	
+	this.foods.enableBody = true;
+
+	var foodsMap = [
+		[100, this.world.height -400, 'schoki'],
+		[180, this.world.height -390, 'donut'],
+		[260, this.world.height -390, 'schnitten'],
+		[340, this.world.height -285, 'muffin'],
+		[420, this.world.height -285, 'schoki'],
+		[500, this.world.height -285, 'donut'],
+		[580, this.world.height -285, 'schnitten'],
+		[660, this.world.height -285, 'muffin'],
+		[740, this.world.height -390, 'schoki'],
+		[900, this.world.height -485, 'donut'],
+		[980, this.world.height -485, 'schnitten'],
+		[1060, this.world.height -485, 'muffin'],
+		[670, this.world.height -485, 'muffin'],
+		[590, this.world.height -600, 'schoki'],
+		[505, this.world.height -600, 'donut'],
+		[420, this.world.height -600, 'schnitten'],
+		[330, this.world.height -530, 'muffin'],
+		[70, this.world.height -660, 'schoki'],
+		[300, this.world.height -900, 'donut'],
+		[365, this.world.height -900, 'schnitten'],
+		[165, this.world.height -1100, 'muffin'],
+		[85, this.world.height -1100, 'schoki'],
+		[5, this.world.height -1100, 'donut'],
+		[450, this.world.height -1100, 'muffin'],
+		[540, this.world.height -1100, 'schoki'],
+		[630, this.world.height -1100, 'donut'],
+		[720, this.world.height -1100, 'schnitten'],
+		[685, this.world.height -700, 'muffin'],
+		[785, this.world.height -700, 'schoki'],
+		[885, this.world.height -700, 'donut'],
+		[985, this.world.height -700, 'schnitten'],
+		[1280, this.world.height -700, 'muffin'],
+		[1480, this.world.height -1100, 'schoki'],
+		[1758, this.world.height -1100, 'donut'],
+		[1668, this.world.height -1100, 'schnitten'],
+		[1866, this.world.height -720, 'muffin'],
+		[1637, this.world.height -570, 'schoki'],
+		[1422, this.world.height -590, 'donut'],
+		[1199, this.world.height -590, 'muffin'],
+		[1130, this.world.height -590, 'schnitten'],
+		[1305, this.world.height -300, 'schoki'],
+		[1605, this.world.height -280, 'donut']
+	];
+
+	for(var i = 0; i < foodsMap.length; i++) {
+		var food = this.foods.create(foodsMap[i][0], foodsMap[i][1], foodsMap[i][2]);
+		food.body.gravity.y = 300;
+		food.body.bounce.y = 0.2 + Math.random() * 0.5;
+	}
+		
+	this.scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#000000'});
+	this.cursors = this.input.keyboard.createCursorKeys();	
 }	
 
-function update() {
-
-	game.physics.arcade.collide(player, wall1);
-	game.physics.arcade.collide(player, blocks50);
-	game.physics.arcade.collide(player, blocks100);
-	game.physics.arcade.collide(player, blocks200);
-	game.physics.arcade.collide(player, blocks300);
-	game.physics.arcade.collide(player, blocks400);
-	game.physics.arcade.collide(player, blocks500);
-	game.physics.arcade.collide(player, blocks800);
-	game.physics.arcade.collide(foods, blocks50);
-	game.physics.arcade.collide(foods, blocks100);
-	game.physics.arcade.collide(foods, blocks200);
-	game.physics.arcade.collide(foods, blocks300);
-	game.physics.arcade.collide(foods, blocks400);
-	game.physics.arcade.collide(foods, blocks500);
-	game.physics.arcade.collide(foods, blocks800);
-	//game.physics.arcade.collide(player, foods);
+raimund.gameState.prototype.update = function() {
+	this.game.physics.arcade.collide(this.player, this.blocks);
+	this.game.physics.arcade.collide(this.foods, this.blocks);
 	
-	game.physics.arcade.overlap(player, wall, killPlayer, null, this);
-	game.physics.arcade.overlap(player, foods, collectFood, null, this);
+	this.game.physics.arcade.overlap(this.player, this.walls, this.killPlayer, null, this);
+	this.game.physics.arcade.overlap(this.player, this.foods, this.collectFood, null, this);
 	
-	player.body.velocity.x = 0;
+	this.player.body.velocity.x = 0;
 	
-	if (cursors.left.isDown)
+	if (this.cursors.left.isDown)
 	{
-		player.body.velocity.x = -165;
-	
-		player.animations.play('left');
-	}
-	else if (cursors.right.isDown)
-	{
-		player.body.velocity.x = 165;
-		
-		player.animations.play('right');	
-	}
-	else
-	{
-		player.animations.stop();
-		
-		player.frame = 4;
+		this.player.body.velocity.x = -165;
+		this.player.animations.play('left');
+	} else if (this.cursors.right.isDown) {
+		this.player.body.velocity.x = 165;
+		this.player.animations.play('right');	
+	} else {
+		this.player.animations.stop();
+		this.player.frame = 4;
 	}
 	
-	if (cursors.up.isDown && player.body.touching.down)
+	if (this.cursors.up.isDown && this.player.body.touching.down)
 	{
-		player.body.velocity.y = -320;
+		this.player.body.velocity.y = -320;
 	}
 	
 }
 	
-	function killPlayer (player, wall) {
-	
+raimund.gameState.prototype.killPlayer = function(player, wall) {
 	player.kill();
+}
 	
-	}
-	
-	function collectFood (player, food) {
-	
+raimund.gameState.prototype.collectFood = function(player, food) {
 	food.kill();
+	this.score += 10;
+	this.scoreText.text = "Score: " + this.score;
 	
-	score += 10;
-	scoreText.text = "Score: " + score;
-	
-	if(score == 420) {
-		game.add.text(800, 450, 'jöö', { fonSize: '90px', fill: '#000000' });	
+	if(this.score == 420) {
+		this.game.add.text(800, 450, 'jöö', { fonSize: '90px', fill: '#000000' });	
 	}
 }
+
+var game = new Phaser.Game(
+	1920,
+	900, 
+	Phaser.AUTO, 
+	'raimund'
+);
+game.state.add('Game', raimund.gameState);
+game.state.start('Game');
 </script>
 
 </body>
