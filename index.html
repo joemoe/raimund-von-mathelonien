@@ -24,6 +24,8 @@ raimund.gameState = function() {
 	this.cursors;
 	this.score = 0;
 	this.scoreText;
+	this.startTime = 0;
+	this.timeText;
 }
 
 raimund.gameState.prototype.preload = function() {
@@ -191,8 +193,11 @@ raimund.gameState.prototype.create = function() {
 		food.body.bounce.y = 0.2 + Math.random() * 0.5;
 	}
 		
-	this.scoreText = this.add.text(16, 16, 'Score: 0', { font: '64px', fill: '#000000'});
+	this.scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '64px', fill: '#000000'});
+	this.timeText = this.add.text(180, 16, '', { fontSize: '64px', fill: '#000000'} );
+	this.startTime = this.game.time.totalElapsedSeconds();
 	this.cursors = this.input.keyboard.createCursorKeys();	
+	this.score = 0;
 }	
 
 raimund.gameState.prototype.update = function() {
@@ -220,7 +225,13 @@ raimund.gameState.prototype.update = function() {
 	{
 		this.player.body.velocity.y = -320;
 	}
+
+	this.timeText.text = Math.round((this.time.totalElapsedSeconds() - this.startTime) * 100) / 100;
 	
+	if(this.player.body.y > this.world.height ||
+		this.player.body.x > this.world.width ||
+		this.player.body.x < -this.player.body.width)
+		this.state.start('Lose');
 }
 	
 raimund.gameState.prototype.killPlayer = function(player, wall) {
@@ -232,10 +243,9 @@ raimund.gameState.prototype.collectFood = function(player, food) {
 	food.kill();
 	this.score += 10;
 	this.scoreText.text = "Score: " + this.score;
-	
-	if(this.score == 20) {
-		this.add.text(800, 450, 'jöö', { font: '90px', fill: '#000000' });	
-		this.state.start('Win');
+
+	if(this.foods.countLiving() == 0) {
+		this.state.start('Win', true, false, Math.round((this.time.totalElapsedSeconds() - this.startTime) * 100) / 100);
 	}
 }
 
@@ -265,20 +275,24 @@ raimund.startState.prototype.update = function() {
 }
 
 raimund.startState.prototype.start = function() {
-	this.state.start('Game');
+	this.state.start('Game', true, false);
 }
 
 raimund.winState = function() {
-
+	this.time;
 }
 
 raimund.winState.prototype.preload = function() {
 
 }
 
+raimund.winState.prototype.init = function(time) {
+	this.time = time;
+}
+
 raimund.winState.prototype.create = function() {
 	this.stage.backgroundColor = "#ffffff";
-	this.add.text(this.world.centerX, this.world.centerY - 50, "Yeah, du hast gewonnen");
+	this.add.text(this.world.centerX, this.world.centerY - 50, "Yeah, du hast gewonnen in " + this.time + "s");
 	var button = this.add.text(this.world.centerX, this.world.centerY, "Lass Raimund nochmals schlemmen", {font: "20px Arial", fill: "#ff0000"});
 	button.inputEnabled = true;
 	button.input.useHandCursor = true;
@@ -291,7 +305,7 @@ raimund.winState.prototype.update = function() {
 }
 
 raimund.winState.prototype.start = function() {
-	this.state.start('Game');
+	this.state.start('Game', true, false);
 }
 
 raimund.loseState = function() {
@@ -316,7 +330,7 @@ raimund.loseState.prototype.update = function() {
 }
 
 raimund.loseState.prototype.start = function() {
-	this.state.start('Game');
+	this.state.start('Game', true, false);
 }
 
 var game = new Phaser.Game(
