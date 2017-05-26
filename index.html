@@ -8,22 +8,18 @@
 		body {
 			margin: 0;
 		}
-		
 	</style>
-	<link rel="icon" type="image/png" href="assets/icon16.png" sizes="16x16">
-	<link rel="icon" type="image/png" href="assets/icon32.png" sizes="32x32">
 </head>
 <body>
 
 <script type="text/javascript">
-var PLAYER_GRAVITY = 320;
 
-var PLAYER_JUMPINGVELOCITY = -320;
+var PLAYER_GRAVITY = 640;
+
+var PLAYER_JUMPINGVELOCITY = -640;
 
 
 var raimund = {};
-
-
 
 raimund.gameState = function() {
 	this.blocks;
@@ -35,7 +31,7 @@ raimund.gameState = function() {
 	this.scoreText;
 	this.startTime = 0;
 	this.timeText;
-	this.backgroundSound;
+	this.sound;
 	this.started = false;
 	this.winFood;
 }
@@ -50,12 +46,11 @@ raimund.gameState.prototype.create = function() {
 	this.started = false;
 	this.physics.startSystem(Phaser.Physics.ARCADE);
 
-	this.backgroundSound = this.add.audio('backgroundSound');
-	this.backgroundSound.loop = true;
+	this.sound = this.add.audio('bg-sound');
+	this.sound.loop = true;
 
 
 	this.add.sprite(0, 0, 'background');
-	this.stage.backgroundColor = "#000000";
 
 	this.blocks = this.add.group();
 	this.blocks.enableBody = true;
@@ -119,8 +114,6 @@ raimund.gameState.prototype.create = function() {
 	
 	this.player.animations.add('left', [0, 1, 2, 3], 10, true);
 	this.player.animations.add('right', [5, 6, 7, 8], 10, true);
-	this.player.animations.add('flyLeft', [9], 10, true);
-	this.player.animations.add('flyRight', [10], 10, true);
 
 	
 	
@@ -129,7 +122,7 @@ raimund.gameState.prototype.create = function() {
 	this.foods.enableBody = true;
 
 	var foodsMap = [
-		[100, this.world.height -400, 'schoki'],
+		//[100, this.world.height -400, 'schoki'],
 		[180, this.world.height -390, 'donut'],
 		[260, this.world.height -390, 'schnitten'],
 		[340, this.world.height -285, 'muffin'],
@@ -178,9 +171,9 @@ raimund.gameState.prototype.create = function() {
 		food.body.gravity.y = 300;
 		food.body.bounce.y = 0.2 + Math.random() * 0.5;
 	}
-	this.winFood = this.foods.create(1806, this.world.height -300, 'schnitten');
-	this.winFood.body.gravity.y = 300;
-	this.winFood.body.bounce.y = 0.2 + Math.random() * 0.5;
+	// this.winFood = this.foods.create(100, this.world.height -400, 'schoki');
+	// this.winFood.body.gravity.y = 300;
+	// this.winFood.body.bounce.y = 0.2 + Math.random() * 0.5;
 		
 	this.scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '64px', fill: '#000000'});
 	this.timeText = this.add.text(180, 16, '', { fontSize: '64px', fill: '#000000'} );
@@ -198,16 +191,16 @@ raimund.gameState.prototype.update = function() {
 	this.player.body.velocity.x = 0;
 	
 	var cursorDown = false;
-		if (this.cursors.left.isDown)
+	if (this.cursors.left.isDown)
 	{
 		this.player.body.velocity.x = -165;
 		this.player.animations.play('left');
 		cursorDown = true;
-	} 	else if (this.cursors.right.isDown) {
+	} else if (this.cursors.right.isDown) {
 		this.player.body.velocity.x = 165;
 		this.player.animations.play('right');	
 		cursorDown = true;
-	} 	else {
+	} else {
 		this.player.animations.stop();
 		this.player.frame = 4;
 	}
@@ -217,21 +210,8 @@ raimund.gameState.prototype.update = function() {
 		this.player.body.velocity.y = PLAYER_JUMPINGVELOCITY;
 		cursorDown = true;
 	}
-	
-	if(!this.player.body.touching.down)
-	{
-		if(this.player.body.velocity.x > 0){
-			this.player.animations.play('flyRight');
-			//cursorDown = true;
-		}
-		else if(this.player.body.velocity.x < 0){
-			this.player.animations.play('flyLeft');
-			//cursorDown = true;
-	}
-		
-	}
 
-	/*if(!this.player.body.touching.down) {
+	if(!this.player.body.touching.down) {
 		if(this.player.body.velocity.x > 0) {
 			this.player.frame = 8;
 			this.player.animations.stop();
@@ -243,10 +223,10 @@ raimund.gameState.prototype.update = function() {
 			this.player.animations.stop();			
 		}
 
-	}*/
+	}
 
 	if(!this.started && cursorDown) {
-		this.backgroundSound.play();
+		this.sound.play();
 		this.startTime = this.game.time.totalElapsedSeconds();
 		this.started = true;
 	}
@@ -257,7 +237,7 @@ raimund.gameState.prototype.update = function() {
 	if(this.player.body.y > this.world.height ||
 		this.player.body.x > this.world.width ||
 		this.player.body.x < -this.player.body.width) {
-		this.backgroundSound.stop();
+		this.sound.stop();
 		this.state.start('Lose');
 	}
 		
@@ -265,7 +245,7 @@ raimund.gameState.prototype.update = function() {
 	
 raimund.gameState.prototype.killPlayer = function(player, wall) {
 	player.kill();
-	this.backgroundSound.stop();
+	this.sound.stop();
 	this.state.start('Lose');
 }
 	
@@ -275,15 +255,14 @@ raimund.gameState.prototype.collectFood = function(player, food) {
 	this.scoreText.text = "Score: " + this.score;
 
 	if(food == this.winFood) {
-		this.backgroundSound.stop();
+		this.sound.stop();
 		this.state.start('Win', true, false, Math.round((this.time.totalElapsedSeconds() - this.startTime) * 100) / 100);
 	}
 }
 
 
 raimund.startState = function() {
-	this.startSound;
-	this.startStarted = false;
+
 }
 
 raimund.startState.prototype.preload = function() {
@@ -291,50 +270,37 @@ raimund.startState.prototype.preload = function() {
     this.scale.maxHeight = 900;
 	this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
     this.scale.setScreenSize();
-	this.load.audio('startSound', 'startSound.mp3');
 }
 
 raimund.startState.prototype.create = function() {
-	this.stage.backgroundColor = "#000000";
-	this.add.sprite(0, 0, 'backgroundStart');
+	this.stage.backgroundColor = "#ffffff";
+	this.add.sprite(0, 0, 'background');
 
-	//this.add.text(this.world.centerX - 400, this.world.centerY - 400, "Los geht's:");
-	var button = this.add.image(this.world.centerX - 250, 0, 'wappen');
+	this.add.text(this.world.centerX - 400, this.world.centerY - 50, "Raimund von Mathelonien");
+	var button = this.add.text(this.world.centerX - 400, this.world.centerY, "Los mit Raimund", {font: "20px Arial", fill: "#ff0000"});
 
-	//this.add.text(this.world.centerX, this.world.centerY - 50, startText);
-	/*this.add.text(this.world.centerX + 2, this.world.centerY - 80, 
-		"Willkommen zum Raimundspiel!" +
-		"\n   Damit Du Raimund sicher ans Ziel bringen kannst, musst du folgende Punkte beachten:" + 
-		"\n Raimund mag keine Shrimps - achte also auf die Wände!" +
-		"\n:cake: Raimund mag keine Shrimps",
-		{font: "24px Arial", fill: "black",}
+	this.add.text(this.world.centerX, this.world.centerY, 
+		"Anleitung\nDamit Du das Spiel super spielen kannst befolge folgende Punkte:" + 
+		"\n* Berühre keine Wände" +
+		"\n* Raimund mag keine Shrimps",
+		{font: "20px Arial", fill: "#666666"}
 	);
-	this.add.image(this.world.centerX - 2, this.world.centerY -55, 'bimboheadsmall');*/
 
 	button.inputEnabled = true;
 	button.input.useHandCursor = true;
 	button.events.onInputUp.add(this.start, this);
-	
-	this.startSound = this.add.audio('startSound');
-	this.startSound.loop = true;
 }
 
 raimund.startState.prototype.update = function() {
-	if(!this.startStarted)
-	{
-		this.startSound.play();
-		this.startStarted = true;
-	}
+
 }
 
 raimund.startState.prototype.start = function() {
-	this.state.start('Navigating', true, false);
+	this.state.start('Game', true, false);
 }
 
 raimund.winState = function() {
 	this.time;
-	this.winningSound;
-	this.winStarted = false;
 }
 
 raimund.winState.prototype.preload = function() {
@@ -345,44 +311,25 @@ raimund.winState.prototype.init = function(time) {
 }
 
 raimund.winState.prototype.create = function() {
-	this.stage.backgroundColor = "#000000";
-	this.add.sprite(0,0, 'backgroundWinning');
-	this.add.text(this.world.centerX - 920, this.world.centerY + 310, "Credits:"
-	+ "\nIdea/Code: Paul M" 
-	+ "\nGraphics: Samuel B & Benjamin B" 
-	+ "\nDebugging: Nicolas W", {font: "24px Arial", fill: "#ffffff"});
-	this.add.text(this.world.centerX + 200, this.world.centerY - 400, "Yeah, du hast Mathelonien in " + this.time + " s gerettet! \nDanke!\n"
-	+ "\nKlicke auf das Wappen," 
-	+ "\num eine erneute Invasion zu verhindern!", {font: "37px Arial", fill: "#ffffff"});
-	var button = this.add.image(this.world.centerX + 620, this.world.centerY + 130, 'wappenKlein');
+	this.stage.backgroundColor = "#ffffff";
+	this.add.text(this.world.centerX, this.world.centerY - 50, "Yeah, du hast gewonnen in " + this.time + "s");
+	var button = this.add.text(this.world.centerX, this.world.centerY, "Lass Raimund nochmals schlemmen", {font: "20px Arial", fill: "#ff0000"});
 	button.inputEnabled = true;
 	button.input.useHandCursor = true;
 	button.events.onInputUp.add(this.start, this);
-	
-	this.winningSound = this.add.audio('winningSound');
-	this.winningSound.loop = true;
-	
 
 }
 
 raimund.winState.prototype.update = function() {
-	if(!this.winStarted)
-	{
-		this.winningSound.play();
-		this.winStarted = true;
-	}
 	
 }
 
 raimund.winState.prototype.start = function() {
 	this.state.start('Game', true, false);
-	this.winningSound.stop();
-	this.winStarted = false;
 }
 
 raimund.loseState = function() {
-	this.loosingSound;
-	this.loseStarted = false;
+
 }
 
 raimund.loseState.prototype.preload = function() {
@@ -390,30 +337,20 @@ raimund.loseState.prototype.preload = function() {
 }
 
 raimund.loseState.prototype.create = function() {
-	this.add.sprite(0, 0, 'backgroundLoosing');
-	this.stage.backgroundColor = "#000000";
-	//this.add.text(this.world.centerX, this.world.centerY - 50, "Die Shrimps haben Raimund gefressen");
-	var button = this.add.text(this.world.centerX + 760, this.world.centerY + 390, "RETRY!", {font: "45px bold Arial", fill: "#ffffff"});
+	this.stage.backgroundColor = "#ffffff";
+	this.add.text(this.world.centerX, this.world.centerY - 50, "Du hast leider verloren");
+	var button = this.add.text(this.world.centerX, this.world.centerY, "Gib Raimund noch eine Chance", {font: "20px Arial", fill: "#ff0000"});
 	button.inputEnabled = true;
 	button.input.useHandCursor = true;
 	button.events.onInputUp.add(this.start, this);
-	
-	this.loosingSound = this.add.audio('loosingSound');
-	this.loosingSound.loop = true;
 }
 
 raimund.loseState.prototype.update = function() {
-	if(!this.loseStarted)
-	{
-		this.loosingSound.play();
-		this.loseStarted = true;
-	}
+	
 }
 
 raimund.loseState.prototype.start = function() {
-	this.state.start('Game', true, false);
-	this.loosingSound.stop();
-	this.loseStarted = false;
+	this.state.start('Boot', true, false);
 }
 
 raimund.preloadState = function() {
@@ -431,47 +368,34 @@ raimund.preloadState.prototype.preload = function() {
     this.load.setPreloadSprite(loadingBar);
 
     this.load.image('loading', 'assets/loading.png');
+	this.load.audio('bg-sound', 'soundtrack.mp3');
+
+	this.load.image('background', 'assetsbimbo/background.png');
+	this.load.image('background-start', 'assetsbimbo/background-start.png');
+	this.load.image('block800', 'assetsbimbo/block800.png');
+	this.load.image('block500', 'assetsbimbo/block500.png');
+	this.load.image('block400', 'assetsbimbo/block400.png');
+	this.load.image('block300', 'assetsbimbo/block300.png');
+	this.load.image('block200', 'assetsbimbo/block200.png');
+	this.load.image('block100', 'assetsbimbo/block100.png');
+	this.load.image('block50', 'assetsbimbo/block50.png');
 	
-	this.load.image('background', 'assets/background.png');
-	this.load.image('background-start', 'assets/background-start.png');
-	this.load.image('block800', 'assets/block800.png');
-	this.load.image('block500', 'assets/block500.png');
-	this.load.image('block400', 'assets/block400.png');
-	this.load.image('block300', 'assets/block300.png');
-	this.load.image('block200', 'assets/block200.png');
-	this.load.image('block100', 'assets/block100.png');
-	this.load.image('block50', 'assets/block50.png');
+	this.load.image('wand217', 'assetsbimbo/wand217.png');
+	this.load.image('wand580', 'assetsbimbo/wand580.png');
+	this.load.image('wand150', 'assetsbimbo/wand150.png');
+	this.load.image('wandho115', 'assetsbimbo/wandho115.png');
+	this.load.image('wand110', 'assetsbimbo/wand110.png');
+	this.load.image('wand80', 'assetsbimbo/wand80.png');
+	this.load.image('wandho150', 'assetsbimbo/wandho150.png');
+	this.load.image('wand30', 'assetsbimbo/wand30.png');
 	
-	this.load.image('wand217', 'assets/wand217.png');
-	this.load.image('wand580', 'assets/wand580.png');
-	this.load.image('wand150', 'assets/wand150.png');
-	this.load.image('wandho115', 'assets/wandho115.png');
-	this.load.image('wand110', 'assets/wand110.png');
-	this.load.image('wand80', 'assets/wand80.png');
-	this.load.image('wandho150', 'assets/wandho150.png');
-	this.load.image('wand30', 'assets/wand30.png');
+	this.load.image('donut', 'assetsbimbo/donut.png');
+	this.load.image('donuts', 'assetsbimbo/donuts.png');
+	this.load.image('muffin', 'assetsbimbo/muffin.png');
+	this.load.image('schnitten', 'assetsbimbo/schnitten.png');
+	this.load.image('schoki', 'assetsbimbo/schoki.png');
 	
-	this.load.image('donut', 'assets/donut.png');
-	this.load.image('donuts', 'assets/donuts.png');
-	this.load.image('muffin', 'assets/muffin.png');
-	this.load.image('schnitten', 'assets/schnitten.png');
-	this.load.image('schoki', 'assets/schoki.png');
-	
-	this.load.spritesheet('bimbo', 'assets/bimbo.png', 45, 96);
-	this.load.image('bimboheadsmall', 'assets/bimboheadsmall.png');
-	this.load.image('wappen', 'assets/wappen.png');
-	this.load.image('wappenKlein', 'assets/wappenKlein.png');
-	this.load.image('bimbograd', 'assets/bimbograd.png');
-	
-	this.load.image('backgroundNavigating', 'assets/backgroundNavigating.png');
-	this.load.image('backgroundStart', 'assets/backgroundStart.png');
-	this.load.image('backgroundWinning','assets/backgroundWinning.png');
-	this.load.image('backgroundLoosing', 'assets/backgroundLoosing.png');
-	
-	this.load.audio('backgroundSound', 'sounds/backgroundSound.mp3');
-	this.load.audio('winningSound', 'sounds/winningSound.mp3');
-	this.load.audio('loosingSound', 'sounds/loosingSound.mp3');
-	this.load.audio('startSound', 'sounds/startSound.mp3');
+	this.load.spritesheet('bimbo', 'assetsbimbo/bimbo.png', 45, 96);
 }
 raimund.preloadState.prototype.update = function() {
 
@@ -485,49 +409,16 @@ raimund.bootState = function() {
 }
 raimund.bootState.prototype.preload = function() {
         this.game.load.image('loading', 'assets/loading.png');
-		
 }
 raimund.bootState.prototype.update = function() {
 }
 raimund.bootState.prototype.create = function() {
+
     this.game.scale.pageAlignHorizontally = true;
     this.game.scale.pageAlignVertically = true;
     this.game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
     this.game.scale.setScreenSize(true);
 	this.game.state.start('Preloader');
-}
-
-raimund.navState = function() {
-	//this.startSound;
-}
-raimund.navState.prototype.preload = function() {
-		
-}
-raimund.navState.prototype.create = function() {
-		this.stage.backgroundColor = "#000000";
-		this.add.image(0, 0, 'backgroundNavigating');
-		
-		this.add.text(this.world.centerX - 65, this.world.centerY +150, "Klick auf Raimund, um das Spiel zu starten!");
-		var button = this.add.image(this.world.centerX + 130, 3, 'bimbograd');
-		
-		button.inputEnabled = true;
-		button.input.useHandCursor = true;
-		button.events.onInputUp.add(this.start, this);
-		button.events.onInputUp.add(this.stopStartSound, this);
-}
-
-raimund.navState.prototype.update = function() {
-
-}
-
-raimund.navState.prototype.start = function() {
-	this.state.start('Game', true, false);
-	game.sound.stopAll();
-	
-}
-
-raimund.navState.prototype.stopStartSound = function() {
-	this.startState.prototype.startSound.stop();
 }
 
 var game = new Phaser.Game(
@@ -539,12 +430,10 @@ var game = new Phaser.Game(
 game.state.add('Boot', raimund.bootState);
 game.state.add('Preloader', raimund.preloadState);
 game.state.add('Start', raimund.startState);
-game.state.add('Navigating', raimund.navState);
 game.state.add('Game', raimund.gameState);
 game.state.add('Lose', raimund.loseState);
 game.state.add('Win', raimund.winState);
 game.state.start('Boot');
-
 </script>
 
 </body>
