@@ -35,7 +35,7 @@ raimund.gameState = function() {
 	this.scoreText;
 	this.startTime = 0;
 	this.timeText;
-	this.backgroundSound;
+	this.gameSound;
 	this.started = false;
 	this.winFood;
 }
@@ -50,8 +50,8 @@ raimund.gameState.prototype.create = function() {
 	this.started = false;
 	this.physics.startSystem(Phaser.Physics.ARCADE);
 
-	this.backgroundSound = this.add.audio('backgroundSound');
-	this.backgroundSound.loop = true;
+	this.gameSound = this.add.audio('gameSound');
+	this.gameSound.loop = true;
 
 
 	this.add.sprite(0, 0, 'background');
@@ -246,7 +246,7 @@ raimund.gameState.prototype.update = function() {
 	}*/
 
 	if(!this.started && cursorDown) {
-		this.backgroundSound.play();
+		this.gameSound.play();
 		this.startTime = this.game.time.totalElapsedSeconds();
 		this.started = true;
 	}
@@ -257,7 +257,7 @@ raimund.gameState.prototype.update = function() {
 	if(this.player.body.y > this.world.height ||
 		this.player.body.x > this.world.width ||
 		this.player.body.x < -this.player.body.width) {
-		this.backgroundSound.stop();
+		this.gameSound.stop();
 		this.state.start('Lose');
 	}
 		
@@ -265,7 +265,7 @@ raimund.gameState.prototype.update = function() {
 	
 raimund.gameState.prototype.killPlayer = function(player, wall) {
 	player.kill();
-	this.backgroundSound.stop();
+	this.gameSound.stop();
 	this.state.start('Lose');
 }
 	
@@ -275,7 +275,7 @@ raimund.gameState.prototype.collectFood = function(player, food) {
 	this.scoreText.text = "Score: " + this.score;
 
 	if(food == this.winFood) {
-		this.backgroundSound.stop();
+		this.gameSound.stop();
 		this.state.start('Win', true, false, Math.round((this.time.totalElapsedSeconds() - this.startTime) * 100) / 100);
 	}
 }
@@ -348,7 +348,7 @@ raimund.winState.prototype.create = function() {
 	this.stage.backgroundColor = "#000000";
 	this.add.sprite(0,0, 'backgroundWinning');
 	this.add.text(this.world.centerX - 920, this.world.centerY + 310, "Credits:"
-	+ "\nIdea/Code: Paul M" 
+	+ "\nIdea/Code/Music: Paul M" 
 	+ "\nGraphics: Samuel B & Benjamin B" 
 	+ "\nDebugging: Nicolas W", {font: "24px Arial", fill: "#ffffff"});
 	this.add.text(this.world.centerX + 200, this.world.centerY - 400, "Yeah, du hast Mathelonien in " + this.time + " s gerettet! \nDanke!\n"
@@ -468,7 +468,7 @@ raimund.preloadState.prototype.preload = function() {
 	this.load.image('backgroundWinning','assets/backgroundWinning.png');
 	this.load.image('backgroundLoosing', 'assets/backgroundLoosing.png');
 	
-	this.load.audio('backgroundSound', 'sounds/backgroundSound.mp3');
+	this.load.audio('gameSound', 'sounds/gameSound.mp3');
 	this.load.audio('winningSound', 'sounds/winningSound.mp3');
 	this.load.audio('loosingSound', 'sounds/loosingSound.mp3');
 	this.load.audio('startSound', 'sounds/startSound.mp3');
